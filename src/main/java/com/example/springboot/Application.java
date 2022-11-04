@@ -22,9 +22,13 @@ public class Application {
 	}
 
 	/***
-	 * API Secured by Spring Security SAMl2
-	 * @param principal - retrieve the principal (user) logged in with annotation @AuthenticationPrincipal
-	 * @param model - Springboot ModelMap
+	 * Sample API Secured by Spring Security SAMl2
+	 * 
+	 * @param principal
+	 *            - retrieve the principal (user) logged in with
+	 *            annotation @AuthenticationPrincipal
+	 * @param model
+	 *            - Springboot ModelMap
 	 * @return
 	 */
 	@RequestMapping("/secured/hello")

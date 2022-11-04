@@ -6,5 +6,8 @@
     <body>
         <h1>Secured Page</h1>
         <p th:text="'Hello, ' + ${name} + '!'" />
+        <form th:action="@{/logout}" method="post">
+            <button id="logout" type="submit">Logout</button>
+        </form>
     </body>
 </html>
