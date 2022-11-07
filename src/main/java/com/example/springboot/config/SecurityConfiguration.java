@@ -1,4 +1,4 @@
-package com.example.springboot;
+package com.example.springboot.config;
 
 import java.io.InputStream;
 import java.security.cert.CertificateFactory;
@@ -24,6 +24,7 @@ import org.springframework.security.saml2.provider.service.web.DefaultRelyingPar
 import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.util.AntPathMatcher;
 
 @Configuration
 public class SecurityConfiguration {
@@ -35,8 +36,7 @@ public class SecurityConfiguration {
 			.authorizeHttpRequests(authorize -> 
 				authorize.antMatchers("/") // match a url pattern to "not secure"
 				.permitAll()
-				.anyRequest()
-				.authenticated()
+				.anyRequest().authenticated()
 			)
 			.saml2Login(Customizer.withDefaults())
 			.saml2Logout(Customizer.withDefaults());
@@ -45,7 +45,9 @@ public class SecurityConfiguration {
 		return http.build();
 	}
 
-	private String metaDataLocation = "classpath:saml-certificate/metadata.xml";
+	// SAML xml metadata, can be local or http
+	private String metaDataLocation = "https://dev-07053288.okta.com/app/exk74570pmJ9GEiDR5d7/sso/saml/metadata";
+	// SLO endpoint, should be the same to SSO endpoint
 	private String singleLogoutServiceLocation = "https://dev-07053288.okta.com/app/dev-07053288_mytestapp_1/exk74570pmJ9GEiDR5d7/slo/saml";
 
 	@Bean
@@ -65,6 +67,7 @@ public class SecurityConfiguration {
 	@Bean
 	RelyingPartyRegistrationRepository repository(
 			@Value("classpath:credentials/local.key") RSAPrivateKey privateKey) {
+				
 		RelyingPartyRegistration registration = RelyingPartyRegistrations
 				.fromMetadataLocation(metaDataLocation)
 				.registrationId("okta-saml")
@@ -76,6 +79,7 @@ public class SecurityConfiguration {
 		return new InMemoryRelyingPartyRegistrationRepository(registration);
 	}
 
+	// SLO certificate
 	X509Certificate relyingPartyCertificate() {
 		Resource resource = new ClassPathResource("credentials/local.crt");
 		try (InputStream is = resource.getInputStream()) {
