@@ -65,7 +65,8 @@ public class Application {
 	 * @throws JOSEException
 	 */
 	@GetMapping("/login")
-	public ResponseEntity<String> login() throws JOSEException {
+	public ResponseEntity<String> login(@AuthenticationPrincipal Saml2AuthenticatedPrincipal principal)
+			throws JOSEException {
 
 		// final Authentication authentication =
 		// SecurityContextHolder.getContext().getAuthentication();
@@ -75,7 +76,7 @@ public class Application {
 		// build claims
 		JWTClaimsSet.Builder jwtClaimsSetBuilder = new JWTClaimsSet.Builder();
 		jwtClaimsSetBuilder.expirationTime(dateTime.plusMinutes(120).toDate());
-		jwtClaimsSetBuilder.claim("APP", "SAMPLE");
+		jwtClaimsSetBuilder.claim("name", principal.getName());
 
 		// signature
 		SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), jwtClaimsSetBuilder.build());
