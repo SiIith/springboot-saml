@@ -2,7 +2,6 @@
 <html
     xmlns="http://www.w3.org/1999/xhtml"
     xmlns:th="https://www.thymeleaf.org"
-    xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
 >
     <head>
         <title>Spring Boot and SAML</title>
@@ -12,12 +11,10 @@
         <h1>Welcome</h1>
         <p>
             You are successfully logged in as
-            <span sec:authentication="name"></span>
+            <span th:text="${name}"></span>
         </p>
         <p>Your email address is <span th:text="${emailAddress}"></span>.</p>
-        <p>
-            Your authorities are <span sec:authentication="authorities"></span>.
-        </p>
+        <p>Your authorities are <span th:text="${authorities}"></span>.</p>
         <h2>All Your Attributes</h2>
         <dl th:each="userAttribute : ${userAttributes}">
             <dt th:text="${userAttribute.key}"></dt>
