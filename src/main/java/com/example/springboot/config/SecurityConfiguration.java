@@ -86,7 +86,7 @@
 
 // 		RelyingPartyRegistration registration = RelyingPartyRegistrations
 // 				.fromMetadataLocation(metaDataLocation)
-// 				.registrationId("okta-saml")
+// 				.registrationId("okta")
 // 				.signingX509Credentials(
 // 						(c) -> c.add(Saml2X509Credential.signing(privateKey, relyingPartyCertificate())))
 // 				.singleLogoutServiceLocation(singleLogoutServiceLocation)

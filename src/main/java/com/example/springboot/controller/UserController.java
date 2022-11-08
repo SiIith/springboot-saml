@@ -19,6 +19,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.joda.time.DateTime;
 
+import com.example.springboot.config.JwtTokenUtil;
+
 @Controller
 public class UserController {
     @RequestMapping("/")
@@ -44,18 +46,16 @@ public class UserController {
         model.addAttribute("name", principal.getName());
         model.addAttribute("emailAddress", principal.getFirstAttribute("email"));
         model.addAttribute("userAttributes", principal.getAttributes());
-        String jwt = generateJWT(principal);
+        String jwt = JwtTokenUtil.generateToken(principal);
         model.addAttribute("jwt", jwt);
         return "hello";
     }
 
     /***
-     * WIP WIP WIP
      * Generate JWT after successful login.
      * TODO:
      * 1. store JWT to Redis
      * 2. implement JWT filter and validation
-     * 3. integrate this with SAML authentication
      * 
      * @return
      * @throws JOSEException
@@ -67,7 +67,13 @@ public class UserController {
         // final Authentication authentication =
         // SecurityContextHolder.getContext().getAuthentication();
 
+        model.addAttribute("name", principal.getName());
+        model.addAttribute("emailAddress", principal.getFirstAttribute("email"));
+        model.addAttribute("userAttributes", principal.getAttributes());
+
+        // TODO store JWT to Redis
         String jwt = generateJWT(principal);
+        model.addAttribute("jwt", jwt);
 
         return new ResponseEntity<>(jwt, HttpStatus.OK);
     }
@@ -79,6 +85,7 @@ public class UserController {
         JWTClaimsSet.Builder jwtClaimsSetBuilder = new JWTClaimsSet.Builder();
         jwtClaimsSetBuilder.expirationTime(dateTime.plusMinutes(120).toDate());
         jwtClaimsSetBuilder.claim("name", principal.getName());
+        jwtClaimsSetBuilder.claim("userAttributes", principal.getAttributes());
 
         // signature
         SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), jwtClaimsSetBuilder.build());
