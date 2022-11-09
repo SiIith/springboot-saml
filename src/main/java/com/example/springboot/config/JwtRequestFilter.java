@@ -29,9 +29,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-        HttpServletRequest request, 
-        HttpServletResponse response, 
-        FilterChain chain)
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain)
             throws ServletException, IOException {
 
         final String requestTokenHeader = request.getHeader("Authorization");
@@ -54,6 +54,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             logger.warn("JWT Token does not begin with Bearer String");
         }
 
+        System.out.println(SecurityContextHolder.getContext().getAuthentication());
         // Once we get the token validate it.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -63,22 +64,41 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // authentication
             try {
                 if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
-                    // UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                    //         userDetails, null, userDetails.getAuthorities());
+                    // UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new
+                    // UsernamePasswordAuthenticationToken(
+                    // userDetails, null, userDetails.getAuthorities());
                     // usernamePasswordAuthenticationToken
-                    //         .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     // // After setting the Authentication in the context, we specify
                     // // that the current user is authenticated. So it passes the
                     // // Spring Security Configurations successfully.
                     // SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+
+                    // TODO: do some stuff here to validate JWT against redis cache
                 } else {
-                    System.out.println("Invalid/expired token");
+                    // TODO response 401 and remove SAML2 user form context
+                    response.sendError(
+                            HttpServletResponse.SC_UNAUTHORIZED,
+                            "The token is not valid.");
+
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+        } else {
+            // TODO response 401 and remove SAML2 user form context
+            System.out.print("Should be 401");
         }
         chain.doFilter(request, response);
+    }
+
+    // do not filter root path and /login
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return (path.equals("/") ||
+                path.startsWith("/login") ||
+                path.startsWith("/logout"));
     }
 
 }
