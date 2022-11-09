@@ -98,7 +98,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         return (path.equals("/") ||
                 path.startsWith("/login") ||
-                path.startsWith("/logout"));
+                path.startsWith("/logout") ||
+                path.equals("/auth_token"));
     }
 
 }

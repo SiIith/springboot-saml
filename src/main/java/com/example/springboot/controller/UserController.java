@@ -40,7 +40,7 @@ public class UserController {
      *                  - Springboot ModelMap
      * @return
      */
-    @RequestMapping("/secured/hello")
+    @GetMapping("/secured/hello")
     public String hello(@AuthenticationPrincipal Saml2AuthenticatedPrincipal principal, Model model)
             throws JOSEException {
         model.addAttribute("name", principal.getName());
@@ -50,4 +50,17 @@ public class UserController {
         model.addAttribute("jwt", jwt);
         return "hello";
     }
+
+    // generate JWT, response 200 with JWT and model
+    @GetMapping("/auth_token")
+    public ResponseEntity<Object> login(@AuthenticationPrincipal Saml2AuthenticatedPrincipal principal, Model model)
+            throws JOSEException {
+        model.addAttribute("name", principal.getName());
+        model.addAttribute("emailAddress", principal.getFirstAttribute("email"));
+        model.addAttribute("userAttributes", principal.getAttributes());
+        String jwt = JwtTokenUtil.generateToken(principal);
+        model.addAttribute("jwt", jwt);
+        return new ResponseEntity<>(model, HttpStatus.OK);
+    }
+
 }
