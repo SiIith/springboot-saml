@@ -76,7 +76,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     // // Spring Security Configurations successfully.
                     // SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
-                    // TODO: do some stuff here to validate JWT against redis cache
+                    // TODO: do some stuff here to validate JWT
                     JWTClaimsSet claims = jwtTokenUtil.getAllClaimsFromToken(jwtToken);
                     // attach claims to request
                     request.setAttribute("decoded_user", claims);
