@@ -34,7 +34,7 @@ public class JwtTokenUtil implements Serializable {
     }
 
     // retrieve JWT claims from JWT string
-    private JWTClaimsSet getAllClaimsFromToken(String jwt) throws ParseException {
+    public JWTClaimsSet getAllClaimsFromToken(String jwt) throws ParseException {
         SignedJWT signedJWT = SignedJWT.parse(jwt);
         return signedJWT.getJWTClaimsSet();
     }

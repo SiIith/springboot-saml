@@ -17,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.springboot.service.JwtUserDetailsService;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.example.springboot.config.JwtTokenUtil;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -75,6 +77,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     // SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
                     // TODO: do some stuff here to validate JWT against redis cache
+                    JWTClaimsSet claims = jwtTokenUtil.getAllClaimsFromToken(jwtToken);
+                    // attach claims to request
+                    request.setAttribute("decoded_user", claims);
+
                 } else {
                     // TODO response 401 and remove SAML2 user form context
                     response.sendError(
