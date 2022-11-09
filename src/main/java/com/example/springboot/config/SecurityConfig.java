@@ -36,7 +36,7 @@ public class SecurityConfig {
         authenticationProvider.setResponseAuthenticationConverter(groupsConverter());
 
         http
-                .authorizeHttpRequests(authorize -> authorize.antMatchers("/")
+                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/")
                         .permitAll()
                         .anyRequest().authenticated())
                 .saml2Login(saml2 -> saml2

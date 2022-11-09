@@ -34,10 +34,10 @@ public class UserController {
      * Success login attaches principal to the request.
      * 
      * @param principal
-     *            - retrieve the principal (user) logged in with
-     *            annotation @AuthenticationPrincipal
+     *                  - retrieve the principal (user) logged in with
+     *                  annotation @AuthenticationPrincipal
      * @param model
-     *            - Springboot ModelMap
+     *                  - Springboot ModelMap
      * @return
      */
     @RequestMapping("/secured/hello")
@@ -50,49 +50,4 @@ public class UserController {
         model.addAttribute("jwt", jwt);
         return "hello";
     }
-
-    /***
-     * Generate JWT after successful login.
-     * TODO:
-     * 1. store JWT to Redis
-     * 2. implement JWT filter and validation
-     * 
-     * @return
-     * @throws JOSEException
-     */
-    @GetMapping("/login")
-    public ResponseEntity<String> login(@AuthenticationPrincipal Saml2AuthenticatedPrincipal principal, Model model)
-            throws JOSEException {
-
-        // final Authentication authentication =
-        // SecurityContextHolder.getContext().getAuthentication();
-
-        model.addAttribute("name", principal.getName());
-        model.addAttribute("emailAddress", principal.getFirstAttribute("email"));
-        model.addAttribute("userAttributes", principal.getAttributes());
-
-        // TODO store JWT to Redis
-        String jwt = generateJWT(principal);
-        model.addAttribute("jwt", jwt);
-
-        return new ResponseEntity<>(jwt, HttpStatus.OK);
-    }
-
-    private String generateJWT(Saml2AuthenticatedPrincipal principal) throws JOSEException {
-        final DateTime dateTime = DateTime.now();
-
-        // build claims
-        JWTClaimsSet.Builder jwtClaimsSetBuilder = new JWTClaimsSet.Builder();
-        jwtClaimsSetBuilder.expirationTime(dateTime.plusMinutes(120).toDate());
-        jwtClaimsSetBuilder.claim("name", principal.getName());
-        jwtClaimsSetBuilder.claim("userAttributes", principal.getAttributes());
-
-        // signature
-        SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), jwtClaimsSetBuilder.build());
-        signedJWT.sign(new MACSigner(JwtSecurityConstant.JWT_SECRET));
-        System.out.println("JWT: " + signedJWT.serialize());
-
-        return signedJWT.serialize();
-    }
-
 }

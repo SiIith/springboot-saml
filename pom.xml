@@ -9,26 +9,56 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.0</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<version>3.0.0-SNAPSHOT</version>
+		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>17</java.version>
 	</properties>
 
 	<repositories>
-		<repository>
-			<id>maven-central</id>
-			<name>Maven Central</name>
-			<url>https://repo1.maven.org/maven2/</url>
-		</repository>
 		<repository>
 			<id>shibboleth</id>
 			<name>Shibboleth Repository</name>
 			<url>https://build.shibboleth.net/nexus/content/repositories/releases</url>
 		</repository>
+				<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
 	</repositories>
+
+		<pluginRepositories>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<dependencyManagement>
 		<dependencies>
@@ -74,6 +104,15 @@
 			<artifactId>joda-time</artifactId>
 			<version>2.10.10</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>servlet-api</artifactId>
+    <version>2.5</version>
+    <scope>provided</scope>
+</dependency>
+
 
 
 		<!-- dependency for saml2 -->
