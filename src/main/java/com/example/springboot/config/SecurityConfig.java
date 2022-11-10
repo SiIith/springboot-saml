@@ -35,13 +35,15 @@ public class SecurityConfig {
         OpenSaml4AuthenticationProvider authenticationProvider = new OpenSaml4AuthenticationProvider();
         authenticationProvider.setResponseAuthenticationConverter(groupsConverter());
 
+        // @formatter:off
         http
-                .authorizeHttpRequests(authorize -> authorize.antMatchers("/")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .saml2Login(saml2 -> saml2
-                        .authenticationManager(new ProviderManager(authenticationProvider)))
-                .saml2Logout(withDefaults());
+            .authorizeHttpRequests(authorize -> authorize
+                .antMatchers("/auth-token").authenticated() // authenticate auth-token endpoint
+                .anyRequest().permitAll() // allow access to the rest, leave them to JWT filter
+            )
+            .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
+            .saml2Logout(withDefaults());
+        // @formatter:on
 
         return http.build();
     }
