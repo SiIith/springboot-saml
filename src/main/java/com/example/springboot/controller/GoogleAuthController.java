@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/2fa")
+@RequestMapping("/code")
 public class GoogleAuthController {
 
     private final GoogleAuthenticator gAuth;
@@ -46,9 +46,11 @@ public class GoogleAuthController {
 
     @PostMapping("/validate/key")
     public Validation validateKey(@RequestBody ValidateCodeDto body) {
+        System.out.println(body);
         return new Validation(gAuth.authorizeUser(body.getUsername(), body.getCode()));
     }
 
+    // get the scratch codes for the user
     @GetMapping("/scratches/{username}")
     public List<Integer> getScratches(@PathVariable String username) {
         return getScratchCodes(username);

@@ -37,6 +37,7 @@ public class SecurityConfig {
 
         // @formatter:off
         http
+            .cors().and().csrf().disable()
             .authorizeHttpRequests(authorize -> authorize
                 .antMatchers("/auth-token").authenticated() // authenticate auth-token endpoint
                 .anyRequest().permitAll() // allow access to the rest, leave them to JWT filter
