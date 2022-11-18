@@ -1,82 +1,99 @@
+/*
+ * Copyright 2002-2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.springboot.config;
 
-// utils
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.InputStream;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 
-// spring core imports
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.converter.Converter;
-
-// SAML2.0 dependencies
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
-import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
-import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
-
-// spring security dependencies
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import static org.springframework.security.config.Customizer.withDefaults;
+import org.springframework.security.saml2.core.Saml2X509Credential;
+import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver;
+import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrations;
+import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain configure(HttpSecurity http) throws Exception {
-
-        // apply custom group to role converter. Not very useful if using JWT to
-        // authenticate other services.
-        OpenSaml4AuthenticationProvider authenticationProvider = new OpenSaml4AuthenticationProvider();
-        authenticationProvider.setResponseAuthenticationConverter(groupsConverter());
-
+    SecurityFilterChain app(HttpSecurity http) throws Exception {
         // @formatter:off
-        http
-            .cors().and().csrf().disable()
-            .authorizeHttpRequests(authorize -> authorize
-                .antMatchers("/auth-token").authenticated() // authenticate auth-token endpoint
-                .anyRequest().permitAll() // allow access to the rest, leave them to JWT filter
-            )
-            .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
-            .saml2Logout(withDefaults());
-        // @formatter:on
+		http
+			.authorizeHttpRequests((authorize) -> authorize
+				.anyRequest().authenticated()
+			)
+			.saml2Login(Customizer.withDefaults())
+			.saml2Logout(Customizer.withDefaults());
+		// @formatter:on
 
         return http.build();
     }
 
-    /***
-     * Custom converter to extract groups attributes from SAML response and attach
-     * to authentication authority.
-     * 
-     * @return Converter
-     */
-    private Converter<OpenSaml4AuthenticationProvider.ResponseToken, Saml2Authentication> groupsConverter() {
-
-        Converter<ResponseToken, Saml2Authentication> delegate = OpenSaml4AuthenticationProvider
-                .createDefaultResponseAuthenticationConverter();
-
-        return (responseToken) -> {
-            Saml2Authentication authentication = delegate.convert(responseToken);
-            Saml2AuthenticatedPrincipal principal = (Saml2AuthenticatedPrincipal) authentication.getPrincipal();
-            List<String> groups = principal.getAttribute("groups");
-            Set<GrantedAuthority> authorities = new HashSet<>();
-
-            // attach authorities (basically Groups in Okta context) to the authentication
-            // this can be used by e.g. antMatchters().hasAuthority("group1") to filter
-            // access by authority
-            // may not be very useful in our case but implementing it just in case
-            if (groups != null) {
-                groups.stream().map(SimpleGrantedAuthority::new).forEach(authorities::add);
-            } else {
-                authorities.addAll(authentication.getAuthorities());
-            }
-            System.out.println(authorities);
-            return new Saml2Authentication(principal, authentication.getSaml2Response(), authorities);
-        };
+    @Bean
+    RelyingPartyRegistrationResolver relyingPartyRegistrationResolver(
+            RelyingPartyRegistrationRepository registrations) {
+        return new DefaultRelyingPartyRegistrationResolver(registrations);
     }
+
+    @Bean
+    FilterRegistrationBean<Saml2MetadataFilter> metadata(RelyingPartyRegistrationResolver registrations) {
+        Saml2MetadataFilter metadata = new Saml2MetadataFilter(registrations, new OpenSamlMetadataResolver());
+        FilterRegistrationBean<Saml2MetadataFilter> filter = new FilterRegistrationBean<>(metadata);
+        filter.setOrder(-101);
+        return filter;
+    }
+
+    @Bean
+    RelyingPartyRegistrationRepository repository(
+            @Value("classpath:credentials/local.key") RSAPrivateKey privateKey) {
+        RelyingPartyRegistration one = RelyingPartyRegistrations
+                .fromMetadataLocation("https://dev-07053288.okta.com/app/exk76h7zywNj0MPhu5d7/sso/saml/metadata")
+                .registrationId("okta-saml")
+                .signingX509Credentials(
+                        (c) -> c.add(Saml2X509Credential.signing(privateKey, relyingPartyCertificate())))
+                .singleLogoutServiceLocation(
+                        "https://dev-07053288.okta.com/app/dev-07053288_testapp2_1/exk76h7zywNj0MPhu5d7/slo/saml")
+                .singleLogoutServiceResponseLocation("http://localhost:8080/logout/saml2/slo")
+                .singleLogoutServiceBinding(Saml2MessageBinding.POST).build();
+        return new InMemoryRelyingPartyRegistrationRepository(one);
+    }
+
+    X509Certificate relyingPartyCertificate() {
+        Resource resource = new ClassPathResource("credentials/local.crt");
+        try (InputStream is = resource.getInputStream()) {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(is);
+        } catch (Exception ex) {
+            throw new UnsupportedOperationException(ex);
+        }
+    }
+
 }
